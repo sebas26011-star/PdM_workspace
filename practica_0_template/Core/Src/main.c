@@ -50,7 +50,6 @@ void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
 static void MX_USART2_UART_Init(void);
 /* USER CODE BEGIN PFP */
-
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -65,6 +64,9 @@ static void MX_USART2_UART_Init(void);
 int main(void)
 {
   /* USER CODE BEGIN 1 */
+	uint32_t time_vector[2] = {2000,50};
+	uint32_t delay_value = time_vector[0];
+	uint32_t iterator = 0;
 
   /* USER CODE END 1 */
 
@@ -98,15 +100,19 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
+	  if (!HAL_GPIO_ReadPin(B1_GPIO_Port, B1_Pin)){
+	  		  iterator = (iterator + 1)%2;
+	  		  delay_value = time_vector[iterator];
+	  		  HAL_Delay(10);
+	  		  //HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, 1);
+	  		  /*while(1);*/
+	  }
 
 	  HAL_GPIO_TogglePin(LD2_GPIO_Port, LD2_Pin);
 	  //HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_5);
-	  HAL_Delay(500);
+	  HAL_Delay(delay_value);
 
-	  if (!HAL_GPIO_ReadPin(B1_GPIO_Port, B1_Pin)){
-		  HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, 1);
-		  while(1);
-	  }
+
 
 
   }
