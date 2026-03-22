@@ -43,7 +43,26 @@
 UART_HandleTypeDef huart2;
 
 /* USER CODE BEGIN PV */
-
+/**
+ * @brief timing vector for blink the LED.
+ * */
+static const uint32_t timesVector[4] = {500, 100, 100, 1000};
+/**
+ * @brief position of the delay value in the time vector, initialized in zero.
+ * */
+volatile uint32_t delayPos = 0;
+/**
+ * @brief volatile value used to quantify how many times the LED state changes.
+ * */
+volatile uint32_t  flagsCounter = 0;
+/**
+ * @brief constant that indicates how many flags must be detected to change the delay value.
+ * */
+static const uint8_t blinksNumber = 2;
+/**
+ * @brief Instance of delay_t struct initialization with zero values for parameters.
+ * */
+static delay_t myDelay = {0};
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -65,15 +84,7 @@ static void MX_USART2_UART_Init(void);
 int main(void)
 {
   /* USER CODE BEGIN 1 */
-	tick_t timesVector[4] = {5000,2000,1000,500};
-	tick_t delayPos = 0;
-	tick_t  flagsCounter = 0;
-	const tick_t blinksNumber = 2;
-	delay_t myDelay = {
-	    .startTime = 0,
-	    .duration = timesVector[0],
-	    .running = false
-	};
+
 
   /* USER CODE END 1 */
 
@@ -102,34 +113,23 @@ int main(void)
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
-  //inicializacion punto 2:
-  //delayInit(&myDelay, timesVector[2] );
 
+  HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin,true); // we initialize the LED ON.
+  delayInit(&myDelay, timesVector[0] ); // start delay countdown.
 
-  //inicializacion punto 3:
-  delayInit(&myDelay, timesVector[0] );
-  HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin,true);
 
   while (1)
   {
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-	 /* CODIGO PUNTO 2
-	 /if(delayRead(&myDelay)){
-		 HAL_GPIO_TogglePin(LD2_GPIO_Port, LD2_Pin);
-	 }
-	 */
-	 /* CODIGO PUNTO 3*/
 	  if(delayRead(&myDelay)){
 	  		 HAL_GPIO_TogglePin(LD2_GPIO_Port, LD2_Pin);
 	  		 flagsCounter ++;
-	  		 if (flagsCounter >= blinksNumber){ // se multiplica por dos porque la bandera se activa para encendido y apagado
+	  		 if ((flagsCounter >= blinksNumber)&&(!delaysIsRunning(&myDelay))){
 	  			flagsCounter = 0;
 	  			delayPos = (delayPos+1)%(sizeof(timesVector) / sizeof(timesVector[0]));
-	  			if (!delaysIsRunning(&myDelay)){
 	  			delayWrite(&myDelay,timesVector[delayPos]);
-	  			}
 	  		 }
 
 	  	 }

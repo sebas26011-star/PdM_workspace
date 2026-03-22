@@ -5,6 +5,11 @@
  *      Author: sebastian pinto
  */
 
+/**
+ * @file API_delay.c
+ * @brief Implementation of functions for handling non-blocking delays.
+ */
+
 /////
 
 #include "API_delay.h"
@@ -22,9 +27,11 @@ void delayInit(delay_t* delay, tick_t duration)
   delay->running = false;
 }
 
+/////
+
 bool_t delayRead(delay_t *delay)
 {
-  /// verify that pointer to delay is valid
+ /// verify that pointer to delay is valid
   if(delay == NULL ) { return false; }
   if(delay->running) {
     if(HAL_GetTick() - delay->startTime >= delay->duration) {
@@ -38,16 +45,17 @@ bool_t delayRead(delay_t *delay)
   return false;
 }
 
+/////
 void delayWrite(delay_t* delay, tick_t duration)
 {
-  if(delay == NULL ) { return; }
+  if(delay == NULL ) { return;}
   delay->duration = duration;
 }
 
-bool_t delaysIsRunning(delay_t * delay){
-
-	 if(delay == NULL ) { return; }
-
+/////
+bool_t delaysIsRunning(delay_t * delay)
+{
+	 if(delay == NULL ) { return;}
 	return delay->running;
 
 }
