@@ -2,11 +2,27 @@
 #include "PM7003.h"   // se necesita para poder llamar a PM7003_ProcessByte()
 
 
+//variable global
+uint8_t PM7003_rx_byte;
 //Variables internas
 UART_HandleTypeDef huart1;
-static uint8_t rx_byte;
 static uint8_t is_initialized = 0;
 
+// FUNCIONES STATIC
+/**
+ * @brief configuracion de GPIO
+ * inicializacion de los pines Rx Y Tx por los que se maneja la comunicacion serial
+ * @param None
+ * @return None
+ */
+static void PM7003_GPIO_Init(void);
+/**
+ * @brief configuracion de UART
+ * inicializacion y configuracion de UART segun el datasheet del dispositivo.
+ * @param None
+ * @return None
+ */
+static void PM7003_UART_Init(void);
 
 //GPIO INIT
 static void PM7003_GPIO_Init(void)
@@ -28,10 +44,7 @@ static void PM7003_GPIO_Init(void)
     HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 }
 
-
-
 // UART INIT
-
 static void PM7003_UART_Init(void)
 {
     __HAL_RCC_USART1_CLK_ENABLE();
@@ -50,6 +63,9 @@ static void PM7003_UART_Init(void)
 }
 
 
+//---------------------------------------------------------------------
+// FUNCIONES GLOBALES
+//---------------------------------------------------------------------
 
 // INIT COMPLETO
 void PM7003_Port_Init(void)
@@ -60,21 +76,17 @@ void PM7003_Port_Init(void)
     is_initialized = 1;
 
     // Iniciar recepción
-    HAL_UART_Receive_IT(&huart1, &rx_byte, 1);
+    PM7003_Port_StartReception();
 }
-
-
 
 // START RECEPCIÓN
 void PM7003_Port_StartReception(void)
 {
     if (is_initialized)
     {
-        HAL_UART_Receive_IT(&huart1, &rx_byte, 1);
+        HAL_UART_Receive_IT(&huart1, &PM7003_rx_byte, 1);
     }
 }
-
-
 
 // STOP RECEPCIÓN
 void PM7003_Port_StopReception(void)
@@ -85,8 +97,6 @@ void PM7003_Port_StopReception(void)
     }
 }
 
-
-
 // CALLBACK PUENTE
 void PM7003_Port_RxCallback(UART_HandleTypeDef *huart)
 {
@@ -96,10 +106,10 @@ void PM7003_Port_RxCallback(UART_HandleTypeDef *huart)
     if (huart == &huart1)
     {
         // Enviar byte al driver
-        PM7003_ProcessByte(rx_byte);
+        PM7003_ProcessByte(PM7003_rx_byte);
+        PM7003_Port_StartReception();
     }
 }
-
 
 //ESTADO
 uint8_t PM7003_Port_IsInitialized(void)
@@ -107,15 +117,14 @@ uint8_t PM7003_Port_IsInitialized(void)
     return is_initialized;
 }
 
-
 // FUNCION DE LA HAL QUE MANEJA LA RECEPCION
-void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) {
-	if (huart == NULL) return;
-    if (huart->Instance == USART1) {
-            // procesamiento
-        	PM7003_Port_RxCallback(huart);
-        	HAL_UART_Receive_IT(&huart1, &rx_byte, 1);
-            // Rehabilitar la interrupción esto lo hace la func anterior
-
-        }
-}
+//void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) {
+//	if (huart == NULL) return;
+//    if (huart->Instance == USART1) {
+//           // procesamiento
+//        	PM7003_Port_RxCallback(huart);
+//        	HAL_UART_Receive_IT(&huart1, &PM7003_rx_byte, 1);
+//            // Rehabilitar la interrupción esto lo hace la func anterior
+//
+//        }
+//}

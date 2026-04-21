@@ -54,7 +54,6 @@ void PM7003_ProcessByte(uint8_t byte);
 // Estado del frame
 /**
  * @brief Indica si hay un frame completo listo
- *
  * @return 1 si hay datos disponibles, 0 en caso contrario
  */
 uint8_t PM7003_IsFrameReady(void);
@@ -73,7 +72,6 @@ void PM7003_GetData(PM7003_Data *data);
 /**
  * @brief Parsea un frame completo de 32 bytes
  * Verifica header y checksum
- *
  * @param frame: buffer de 32 bytes
  * @param data: estructura destino
  *
@@ -87,7 +85,6 @@ int PM7003_ParseFrame(uint8_t *frame, PM7003_Data *data);
 /**
  * @brief Calcula checksum del frame
  * (suma de bytes 0 a 29)
- *
  * @param buffer: frame recibido
  * @return checksum calculado
  */

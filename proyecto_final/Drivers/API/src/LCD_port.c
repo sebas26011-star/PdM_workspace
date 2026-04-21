@@ -7,6 +7,12 @@ static I2C_HandleTypeDef hi2c1;
 // Dirección típica del PCF8574 (0x27 o 0x3F)
 #define LCD_I2C_ADDR (0x27 << 1)  // HAL usa dirección desplazada
 
+// FUNCIONES STATIC
+/**
+ * @brief Inicializa el módulo I2C Y los pines de salida para el LCD
+ * Configura el periférico según los parámetros del datasheet y pinout de la placa
+ */
+static void LCD_I2C_Init(void);
 
 // GPIO + I2C INIT
 static void LCD_I2C_Init(void)
@@ -39,20 +45,20 @@ static void LCD_I2C_Init(void)
     HAL_I2C_Init(&hi2c1);
 }
 
-
+//---------------------------------------------------------------------
+// FUNCIONES GLOBALES
+//---------------------------------------------------------------------
 // INIT
 void LCD_Port_Init(void)
 {
     LCD_I2C_Init();
 }
 
-
 // WRITE BYTE
 void LCD_Port_Write(uint8_t data)
 {
     HAL_I2C_Master_Transmit(&hi2c1, LCD_I2C_ADDR, &data, 1, 100);
 }
-
 
 // DELAY
 void LCD_Port_Delay(uint32_t ms)

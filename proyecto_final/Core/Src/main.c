@@ -17,13 +17,13 @@
   */
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
+#include <LM298N_port.h>
 #include "main.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "PM7003_port.h"
 #include "PM7003.h"
-#include "MOTOR_port.h"
 #include "LM298N.h"
 #include "LCD_port.h"
 #include "LCD.h"
@@ -123,7 +123,7 @@ int main(void)
               if (speed != last_speed)
               {
                   last_speed = speed;
-                  Motor_SetSpeed(speed); // usa tu arranque suave
+                  Motor_SetSpeed(speed); // implementar el arrancador
                   LCD_SetCursor(1,0);
                   LCD_ClearLine(1);
                   sprintf(buffer, "AQ:%s-%d%%",GetAirQuality(PM7003_VALUES.pm2_5),speed);
@@ -254,6 +254,11 @@ static void MX_GPIO_Init(void)
 }
 
 /* USER CODE BEGIN 4 */
+/**
+  * @brief categorizar la calidad del aire
+  * @param pm25, valor de material particulado pm25 obtenido en el sensor
+  * @return string que indica la calidad del aire
+  */
 static const char* GetAirQuality(uint16_t pm25)
 {
     if (pm25 <= 12) return "BUENO";
@@ -262,6 +267,11 @@ static const char* GetAirQuality(uint16_t pm25)
     else if (pm25 <= 150) return "MALO";
     else return "CRITICO";
 }
+/**
+  * @brief Calcular la velocidad del extractor en funciion de la concentracion pm25
+  * @param pm25, valor de material particulado pm25 obtenido en el sensor
+  * @return valor duty para el pwm que controla el motor
+  */
 static uint8_t GetMotorSpeed(uint16_t pm25)
 {
     if (pm25 <= 12) return 0;      // OFF

@@ -31,7 +31,6 @@ void PM7003_Port_RxCallback(UART_HandleTypeDef *huart);
 
 
 // Control de recepción
-
 /**
  * @brief Inicia la recepción por interrupciones
  */

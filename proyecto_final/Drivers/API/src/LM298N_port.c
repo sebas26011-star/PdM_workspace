@@ -1,5 +1,5 @@
+#include <LM298N_port.h>
 #include "stm32f4xx_hal.h"
-#include "motor_port.h"
 #include "main.h"
 
 
@@ -20,6 +20,24 @@ TIM_HandleTypeDef htim2;
 #define PWM_Pin GPIO_PIN_5
 #define PWM_AF GPIO_AF1_TIM2
 #define PWM_CHANNEL TIM_CHANNEL_1
+
+// FUNCIONES STATIC
+/**
+ * @brief configuracion de GPIO
+ * inicializacion de los pines de salida para seleccion de giro y salida del pwm.
+ * @param None
+ * @return None
+ */
+static void Motor_GPIO_Init(void);
+
+/**
+ * @brief configuracion de TIMER y PWM
+ * - Inicializacion y configuracion del timer con el que trabaja el pwm
+ * - Inicializacion y configuracion de parametros del PWM
+ * @param None
+ * @return None
+ */
+static void Motor_TIM_Init(void);
 
 
 // GPIO INIT
@@ -73,6 +91,9 @@ static void Motor_TIM_Init(void)
     HAL_TIM_PWM_Start(&htim2, PWM_CHANNEL);
 }
 
+//---------------------------------------------------------------------
+// FUNCIONES GLOBALES
+//---------------------------------------------------------------------
 
 // INIT GENERAL
 void Motor_Port_Init(void)
@@ -105,6 +126,7 @@ void Motor_Port_Stop(void)
 void Motor_Port_SetSpeed(uint8_t duty)
 {
     if (duty > 100) duty = 100;
+    else if (duty < 0) duty = 0;
 
     uint32_t pwm = (htim2.Init.Period * duty) / 100;
 

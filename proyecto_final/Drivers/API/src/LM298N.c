@@ -1,15 +1,16 @@
+#include <LM298N_port.h>
 #include "LM298N.h"
-#include "motor_port.h"
 
-
+//---------------------------------------------------------------------
+// FUNCIONES GLOBALES
+//---------------------------------------------------------------------
 //Inicialización
 void Motor_Init(void)
 {
     Motor_Port_Init();
 }
 
-
-// Control de movimiento
+//Control de movimiento
 
 void Motor_Forward(void)
 {
@@ -25,8 +26,6 @@ void Motor_Stop(void)
 {
     Motor_Port_Stop();
 }
-
-
 
 // Control de velocidad
 void Motor_SetSpeed(uint8_t speed)

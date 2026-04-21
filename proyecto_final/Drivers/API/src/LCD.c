@@ -13,20 +13,21 @@
 #define LCD_DATA    1
 
 // comandos y constantes
-static const INITIAL_CMD = 0x03;
-static const HOME_CMD = 0X02;
-static const FOUR_BITS_TWO_LINES = 0x28;
-static const DISPLAY_ON = 0x0C;
-static const CLEAR_CMD = 0x01;
-static const SET_POS_CMD = 0x80;
-static const ROW0_INIT_ADRS = 0x00;
-static const ROW1_INIT_ADRS = 0x40;
-static const ROW2_INIT_ADRS = 0x14;
-static const ROW3_INIT_ADRS = 0x54;
+static const uint8_t INITIAL_CMD = 0x03;
+static const uint8_t HOME_CMD = 0X02;
+static const uint8_t FOUR_BITS_TWO_LINES = 0x28;
+static const uint8_t DISPLAY_ON = 0x0C;
+static const uint8_t CLEAR_CMD = 0x01;
+static const uint8_t SET_POS_CMD = 0x80;
+static const uint8_t ROW0_INIT_ADRS = 0x00;
+static const uint8_t ROW1_INIT_ADRS = 0x40;
+static const uint8_t ROW2_INIT_ADRS = 0x14;
+static const uint8_t ROW3_INIT_ADRS = 0x54;
 static uint8_t display_control = 0x0C;
 
 
-// ENABLE PULSE
+// DEFINICION DE FUNCIONES SATATIC
+
 /**
  * @brief funcion para envio de dato con pulso de enable.
  *realiza dos veces el envio del byte de dato o coamndo, el primero con mascada para EN=1 y
@@ -34,6 +35,27 @@ static uint8_t display_control = 0x0C;
  * @param data, byte completo a enviar con el bit de EN en 0. ya debe tener las mascaras de los otros
  * bits de control establecida.
  */
+static void LCD_EnablePulse(uint8_t data);
+
+/**
+ * @brief funcion para envio de dato en modo de 4 bits.
+ *utilizada para enviar mitades del comando o dato que se le quiere enviar al LCD.
+ * @param nibble,mitad del comando o dato a enviar (MSB, LSB).
+ * @param mode, modo en el que se realiza el envio, si es un comando mode=0, si es un dato mode=1
+ * la funcion realiza mascaras y desplazacmeintos con este valor para poder organizar el byte a enviar.
+ */
+static void LCD_Write4(uint8_t nibble, uint8_t mode);
+
+/**
+ * @brief funcion para envio de bytes(nibble) para la inicializacion del LCD.
+ *la funcion solo es utilizaca en la inicializacion durante el envio de los comandos
+ *que solicita el lcd para funcionar en modo de 4 bits.
+ * @param nibble, comando de inicializacion a enviar (no es el byte completo, la funcion),
+ * la funcion realiza mascaras y desplazacmeintos con este valor para poder organizar el byte a enviar.
+ */
+static void LCD_WriteInit(uint8_t nibble);
+
+// ENABLE PULSE
 static void LCD_EnablePulse(uint8_t data)
 {
     LCD_Port_Write(data | LCD_EN);   // EN = 1
@@ -44,13 +66,6 @@ static void LCD_EnablePulse(uint8_t data)
 }
 
 // FUNCIÓN BASE
-/**
- * @brief funcion para envio de dato en modo de 4 bits.
- *utilizada para enviar mitades del comando o dato que se le quiere enviar al LCD.
- * @param nibble,mitad del comando o dato a enviar (MSB, LSB).
- * @param mode, modo en el que se realiza el envio, si es un comando mode=0, si es un dato mode=1
- * la funcion realiza mascaras y desplazacmeintos con este valor para poder organizar el byte a enviar.
- */
 static void LCD_Write4(uint8_t nibble, uint8_t mode)
 {
     uint8_t data = 0;
@@ -72,22 +87,7 @@ static void LCD_Write4(uint8_t nibble, uint8_t mode)
     LCD_EnablePulse(data);
 }
 
-// ENVÍO BYTE
-void LCD_SendByte(uint8_t value, uint8_t mode)
-{
-    LCD_Write4((value >> 4) & 0x0F, mode); // MSB
-    LCD_Write4(value & 0x0F, mode);        // LSB
-}
-
-
 // INIT LOW LEVEL
-/**
- * @brief funcion para envio de bytes(nibble) para la inicializacion del LCD.
- *la funcion solo es utilizaca en la inicializacion durante el envio de los comandos
- *que solicita el lcd para funcionar en modo de 4 bits.
- * @param nibble, comando de inicializacion a enviar (no es el byte completo, la funcion),
- * la funcion realiza mascaras y desplazacmeintos con este valor para poder organizar el byte a enviar.
- */
 static void LCD_WriteInit(uint8_t nibble)
 {
     uint8_t data = 0;
@@ -107,8 +107,18 @@ static void LCD_WriteInit(uint8_t nibble)
     LCD_EnablePulse(data);
 }
 
+//---------------------------------------------------------------------
+// FUNCIONES GLOBALES
+//---------------------------------------------------------------------
 
-// INIT
+//ENVÍO BYTE
+void LCD_SendByte(uint8_t value, uint8_t mode)
+{
+    LCD_Write4((value >> 4) & 0x0F, mode); // MSB
+    LCD_Write4(value & 0x0F, mode);        // LSB
+}
+
+//INIT
 void LCD_Init(void)
 {
     LCD_Port_Init();
@@ -134,7 +144,6 @@ void LCD_Init(void)
     LCD_Port_Delay(2);
 }
 
-
 //CONTROL BÁSICO
 void LCD_ClearLine(uint8_t row)
 {
@@ -147,6 +156,7 @@ void LCD_ClearLine(uint8_t row)
 
     LCD_SetCursor(row, 0); // opcional: regresar cursor
 }
+
 void LCD_Clear(void)
 {
     LCD_SendByte(CLEAR_CMD, LCD_COMMAND);
@@ -158,7 +168,6 @@ void LCD_Home(void)
     LCD_SendByte(HOME_CMD, LCD_COMMAND);
     LCD_Port_Delay(2);
 }
-
 
 //CURSOR
 void LCD_SetCursor(uint8_t row, uint8_t col)
@@ -174,9 +183,8 @@ void LCD_SetCursor(uint8_t row, uint8_t col)
         default: address = ROW0_INIT_ADRS + col; break;
     }
 
-    LCD_SendByte(0x80 | address, LCD_COMMAND);
+    LCD_SendByte(SET_POS_CMD | address, LCD_COMMAND);
 }
-
 
 //ESCRITURA
 void LCD_WriteChar(char ch)
@@ -192,7 +200,7 @@ void LCD_WriteString(char *str)
     }
 }
 
-// CONFIG DISPLAY
+//CONFIG DISPLAY
 void LCD_SetDisplayState(bool state)
 {
 	display_control = DISPLAY_ON;
