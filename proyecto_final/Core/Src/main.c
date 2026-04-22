@@ -17,130 +17,117 @@
   */
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
-#include <LM298N_port.h>
 #include "main.h"
-
-/* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "PM7003_port.h"
 #include "PM7003.h"
+#include "LM298N_port.h"
 #include "LM298N.h"
 #include "LCD_port.h"
 #include "LCD.h"
+#include <stdio.h>
 /* USER CODE END Includes */
-
-/* Private typedef -----------------------------------------------------------*/
-/* USER CODE BEGIN PTD */
-
-/* USER CODE END PTD */
-
-/* Private define ------------------------------------------------------------*/
-/* USER CODE BEGIN PD */
-
-/* USER CODE END PD */
-
-/* Private macro -------------------------------------------------------------*/
-/* USER CODE BEGIN PM */
-
-/* USER CODE END PM */
 
 /* Private variables ---------------------------------------------------------*/
 UART_HandleTypeDef huart2;
+
+/* USER CODE BEGIN PV */
 PM7003_Data PM7003_VALUES;
 char buffer[16];
-/* USER CODE BEGIN PV */
 
+static uint16_t last_pm25 = 0;
+static int8_t last_speed = -1;
+
+/* Constantes PWM */
+static const uint8_t MOTOR_POWER_OFF = 0;
+static const uint8_t MOTOR_POWER_HALF = 50;
+static const uint8_t MOTOR_POWER_MEDIUM_HIGH = 80;
+static const uint8_t MOTOR_POWER_MAX = 100;
+
+/* Constantes calidad aire */
+static const uint16_t GOOD_LIMIT = 12;
+static const uint16_t OK_LIMIT = 35;
+static const uint16_t WARNING_LIMIT = 55;
+static const uint16_t BAD_LIMIT = 150;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
 static void MX_USART2_UART_Init(void);
+
 /* USER CODE BEGIN PFP */
 static const char* GetAirQuality(uint16_t pm25);
 static uint8_t GetMotorSpeed(uint16_t pm25);
 /* USER CODE END PFP */
 
-/* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-
-
 /* USER CODE END 0 */
 
-/**
-  * @brief  The application entry point.
-  * @retval int
-  */
 int main(void)
 {
-
-  /* USER CODE BEGIN 1 */
-
-  /* USER CODE END 1 */
-
-  /* MCU Configuration--------------------------------------------------------*/
-
-  /* Reset of all peripherals, Initializes the Flash interface and the Systick. */
   HAL_Init();
-
-  /* USER CODE BEGIN Init */
-
-  /* USER CODE END Init */
-
-  /* Configure the system clock */
   SystemClock_Config();
 
-  /* USER CODE BEGIN SysInit */
-
-  /* USER CODE END SysInit */
-
-  /* Initialize all configured peripherals */
   MX_GPIO_Init();
   MX_USART2_UART_Init();
+
   /* USER CODE BEGIN 2 */
+
+  // Inicialización de módulos
   PM7003_Port_Init();
   PM7003_Init();
+
   Motor_Init();
   Motor_Forward();
+
   LCD_Init();
-  LCD_SetCursor(0, 0);
   LCD_Clear();
-  uint16_t last_pm25 = 0;
-  int8_t last_speed = -1;
+
+  LCD_SetCursor(0,0);
+  LCD_WriteString("CALIDAD DE AIRE");
+
+  HAL_Delay(2000);
+  LCD_Clear();
+
   /* USER CODE END 2 */
 
-  /* Infinite loop */
-  /* USER CODE BEGIN WHILE */
   while (1)
-      {
-          if (PM7003_IsFrameReady())
-          {
-              PM7003_GetData(&PM7003_VALUES);
+  {
+    /* USER CODE BEGIN WHILE */
 
-              // 🔥 CONTROL MOTOR
-              int8_t speed = GetMotorSpeed(PM7003_VALUES.pm2_5);
+    if (PM7003_IsFrameReady())
+    {
+        PM7003_GetData(&PM7003_VALUES);
 
-              if (speed != last_speed)
-              {
-                  last_speed = speed;
-                  Motor_SetSpeed(speed); // implementar el arrancador
-                  LCD_SetCursor(1,0);
-                  LCD_ClearLine(1);
-                  sprintf(buffer, "AQ:%s-%d%%",GetAirQuality(PM7003_VALUES.pm2_5),speed);
-                  LCD_WriteString(buffer);
-              }
+        // CONTROL MOTOR
+        uint8_t speed = GetMotorSpeed(PM7003_VALUES.pm2_5);
 
-              if (PM7003_VALUES.pm2_5 != last_pm25)
-              {
-                  last_pm25 = PM7003_VALUES.pm2_5;
+        if (speed != last_speed)
+        {
+            last_speed = speed;
+            Motor_SetSpeed(speed);
+            LCD_ClearLine(1);
+            LCD_SetCursor(1,0);
+            // ACTUALIZAR LCD SOLO SI LA VELOCIDAD DEL MOTOR CAMBIA SU VALOR
+            sprintf(buffer, "AQ:%s-%3d%%",
+                    GetAirQuality(PM7003_VALUES.pm2_5),
+                    speed);
+            LCD_WriteString(buffer);
+        }
 
-                  LCD_SetCursor(0,0);
-                  sprintf(buffer, "PM2.5:%4d ug/m3", PM7003_VALUES.pm2_5);
-                  LCD_WriteString(buffer);
-              }
-          }
-      }
-  /* USER CODE END 3 */
+        // ACTUALIZAR LCD SOLO SI PM25 CAMBIA SU VALOR
+        if (PM7003_VALUES.pm2_5 != last_pm25)
+        {
+            last_pm25 = PM7003_VALUES.pm2_5;
+            LCD_SetCursor(0,0);
+            sprintf(buffer, "PM2.5:%4d", PM7003_VALUES.pm2_5);
+            LCD_WriteString(buffer);
+        }
+    }
+
+    /* USER CODE END WHILE */
+  }
 }
 
 /**
@@ -261,10 +248,10 @@ static void MX_GPIO_Init(void)
   */
 static const char* GetAirQuality(uint16_t pm25)
 {
-    if (pm25 <= 12) return "BUENO";
-    else if (pm25 <= 35) return "OK";
-    else if (pm25 <= 55) return "ALERTA";
-    else if (pm25 <= 150) return "MALO";
+    if (pm25 <= GOOD_LIMIT) return "BUENO";
+    else if (pm25 <= OK_LIMIT) return "OK";
+    else if (pm25 <= WARNING_LIMIT) return "ALERTA";
+    else if (pm25 <= BAD_LIMIT) return "MALO";
     else return "CRITICO";
 }
 /**
@@ -274,11 +261,11 @@ static const char* GetAirQuality(uint16_t pm25)
   */
 static uint8_t GetMotorSpeed(uint16_t pm25)
 {
-    if (pm25 <= 12) return 0;      // OFF
-    else if (pm25 <= 35) return 0;
-    else if (pm25 <= 55) return 50;
-    else if (pm25 <= 150) return 80;
-    else return 100;
+    if (pm25 <= GOOD_LIMIT) return MOTOR_POWER_OFF;      // OFF
+    else if (pm25 <= OK_LIMIT) return MOTOR_POWER_OFF;
+    else if (pm25 <= WARNING_LIMIT) return MOTOR_POWER_HALF;
+    else if (pm25 <= BAD_LIMIT) return MOTOR_POWER_MEDIUM_HIGH;
+    else return MOTOR_POWER_MAX;
 }
 /* USER CODE END 4 */
 

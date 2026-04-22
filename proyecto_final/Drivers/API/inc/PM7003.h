@@ -28,11 +28,7 @@ typedef struct
     uint16_t pm2_5_cf1;  // PM2.5 (CF=1)
     uint16_t pm10_cf1;   // PM10  (CF=1)
 
-} PM7003_Data;
-
-
-
-// Inicialización lógica
+}PM7003_Data; // Inicialización lógica
 
 /**
  * @brief Inicializa variables internas del driver
