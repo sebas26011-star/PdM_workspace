@@ -7,7 +7,8 @@ extern UART_HandleTypeDef huart1; // UART (definido en el archivo port de PM7003
 // CALLBACK GLOBAL
 /*aqui redefinimos la funcion que maneja la recepcion por interrupcion de los puertos UART,
  * en caso de necesitar utilizar otro modulo UART, se puede gestionar su interrupcion en este mismo
- * archivo
+ * archivo. se define en un archivo aparte porque es mas facil su manejo si es definida externamente y
+ * de esta forma no rompemos modularidad.
  */
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 {

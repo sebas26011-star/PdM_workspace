@@ -1,8 +1,6 @@
 #include "PM7003.h"
 
-// =====================
 //Variables internas
-// =====================
 static uint8_t frame[PM7003_FRAME_SIZE];
 static uint8_t index = 0;
 static uint8_t state = 0;
