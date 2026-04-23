@@ -2,6 +2,7 @@
 #define LM298N_PORT_H
 
 #include <stdint.h>
+#include <stdbool.h>
 
 
 // Inicialización
@@ -45,5 +46,12 @@ void Motor_Port_Stop(void);
  * @return None
  */
 void Motor_Port_SetSpeed(uint8_t duty);
+
+/**
+ * @brief realiza un delay en ms
+ * @param delay, valor en ms del retardo
+ * @return None
+ */
+void Motor_port_delay(uint32_t ms);
 
 #endif

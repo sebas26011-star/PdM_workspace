@@ -2,6 +2,7 @@
 #define LM298N_H
 
 #include <stdint.h>
+#include <stdbool.h>
 
 
 //  Inicialización

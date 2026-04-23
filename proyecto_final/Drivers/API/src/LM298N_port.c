@@ -72,7 +72,7 @@ static void Motor_TIM_Init(void)
     // Configuración base del timer
     htim2.Instance = TIM2;
     htim2.Init.Prescaler = 84 - 1;   // 84 MHz / 84 = 1 MHz
-    htim2.Init.Period = 100 - 1;    // 1 kHz PWM
+    htim2.Init.Period = 1000 - 1;    // 10 kHz PWM
     htim2.Init.CounterMode = TIM_COUNTERMODE_UP;
     htim2.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
 
@@ -132,3 +132,15 @@ void Motor_Port_SetSpeed(uint8_t duty)
 
     __HAL_TIM_SET_COMPARE(&htim2, PWM_CHANNEL, pwm);
 }
+
+//DELAY
+void Motor_port_delay(uint32_t ms){
+		HAL_Delay(ms);
+}
+
+
+
+
+
+
+

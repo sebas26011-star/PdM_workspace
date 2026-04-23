@@ -40,7 +40,8 @@ static int8_t last_speed = -1;
 
 /* Constantes PWM */
 static const uint8_t MOTOR_POWER_OFF = 0;
-static const uint8_t MOTOR_POWER_HALF = 50;
+static const uint8_t MOTOR_POWER_LOW = 40;
+static const uint8_t MOTOR_POWER_HALF = 60;
 static const uint8_t MOTOR_POWER_MEDIUM_HIGH = 80;
 static const uint8_t MOTOR_POWER_MAX = 100;
 
@@ -262,7 +263,7 @@ static const char* GetAirQuality(uint16_t pm25)
 static uint8_t GetMotorSpeed(uint16_t pm25)
 {
     if (pm25 <= GOOD_LIMIT) return MOTOR_POWER_OFF;      // OFF
-    else if (pm25 <= OK_LIMIT) return MOTOR_POWER_OFF;
+    else if (pm25 <= OK_LIMIT) return MOTOR_POWER_LOW ;
     else if (pm25 <= WARNING_LIMIT) return MOTOR_POWER_HALF;
     else if (pm25 <= BAD_LIMIT) return MOTOR_POWER_MEDIUM_HIGH;
     else return MOTOR_POWER_MAX;
