@@ -94,41 +94,36 @@ int main(void)
   /* USER CODE END 2 */
 
   while (1)
-  {
-    /* USER CODE BEGIN WHILE */
+      {
+          if (PM7003_IsFrameReady())
+          {
+              PM7003_GetData(&PM7003_VALUES);
 
-    if (PM7003_IsFrameReady())
-    {
-        PM7003_GetData(&PM7003_VALUES);
+              //CONTROL MOTOR
+              int8_t speed = GetMotorSpeed(PM7003_VALUES.pm2_5);
 
-        // CONTROL MOTOR
-        uint8_t speed = GetMotorSpeed(PM7003_VALUES.pm2_5);
+              if (speed != last_speed)
+              {
+                  last_speed = speed;
+                  Motor_SetSpeed(speed); // implementar el arrancador
+                  LCD_SetCursor(1,0);
+                  LCD_ClearLine(1);
+                  sprintf(buffer, "AQ:%s-%d%%",GetAirQuality(PM7003_VALUES.pm2_5),speed);
+                  LCD_WriteString(buffer);
+              }
 
-        if (speed != last_speed)
-        {
-            last_speed = speed;
-            Motor_SetSpeed(speed);
-            LCD_ClearLine(1);
-            LCD_SetCursor(1,0);
-            // ACTUALIZAR LCD SOLO SI LA VELOCIDAD DEL MOTOR CAMBIA SU VALOR
-            sprintf(buffer, "AQ:%s-%3d%%",
-                    GetAirQuality(PM7003_VALUES.pm2_5),
-                    speed);
-            LCD_WriteString(buffer);
-        }
+              if (PM7003_VALUES.pm2_5 != last_pm25)
+              {
+                  last_pm25 = PM7003_VALUES.pm2_5;
 
-        // ACTUALIZAR LCD SOLO SI PM25 CAMBIA SU VALOR
-        if (PM7003_VALUES.pm2_5 != last_pm25)
-        {
-            last_pm25 = PM7003_VALUES.pm2_5;
-            LCD_SetCursor(0,0);
-            sprintf(buffer, "PM2.5:%4d", PM7003_VALUES.pm2_5);
-            LCD_WriteString(buffer);
-        }
-    }
+                  LCD_SetCursor(0,0);
+                  sprintf(buffer, "PM2.5:%4d ug/m3", PM7003_VALUES.pm2_5);
+                  LCD_WriteString(buffer);
+              }
+          }
+      }
 
     /* USER CODE END WHILE */
-  }
 }
 
 /**
